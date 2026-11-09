@@ -13,7 +13,7 @@ HTML autónomo, sin dependencias ni instalación. También puedes descargar `ind
 - **Empresas**: nombre, tamaño, cantidad y mes de incorporación. Sus parámetros y precios se heredan del tamaño, sin excepciones individuales.
 - **Clasificación y capacidad**: trabajo común, por cliente y por bloques de personal.
 - **Comparar escenarios**: los mismos precios fijos o los propios de cada alternativa.
-- **Simular una empresa**: EGC, tiendas, usuarios, plan, frecuencias ETL/BI, CPU/RAM, volumen, soporte, precios y margen. Permite cargar una empresa, reemplazarla solo para el cálculo, agregar una empresa hipotética a la cartera o evaluar la plataforma con una sola empresa.
+- **Simular una empresa**: EGC, tiendas, usuarios, plan, frecuencias ETL/BI, CPU/RAM, volumen, soporte, precios y margen. Tres tarjetas permiten cargar pequeño, mediano o grande, agregar una empresa hipotética a la cartera o evaluar la plataforma con una sola empresa.
 - **Cómo se calcula**: fórmulas, alcance y supuestos.
 
 Cada modificación válida recalcula las vistas y muestra una confirmación. La notificación distingue cambios de resultados de cambios guardados que no alteran los importes. Los valores inválidos se rechazan. En escritorio, la barra lateral se desplaza de forma independiente.
@@ -85,7 +85,7 @@ La importación admite versiones v1–v6 y la exportación utiliza `panel-b2b-v6
 
 ## Simulación y cobros extra
 
-Seleccionar pequeño, mediano o grande precarga todos los parámetros, mensualidad, alta y precio por usuario adicional. **Recargar tamaño** restaura la referencia vigente. Ambas acciones reinician los ajustes temporales y los extras; editar una plantilla no sobrescribe una simulación que ya se está preparando.
+Las tarjetas **Tamaño pequeño**, **Tamaño mediano** y **Tamaño grande** muestran los parámetros principales y precios de referencia. Pulsar una precarga todos sus parámetros, mensualidad, alta y precio por usuario adicional. Volver a pulsar la tarjeta seleccionada restaura la referencia vigente. Cada selección reinicia los ajustes temporales y los extras; editar una plantilla no sobrescribe una simulación que ya se está preparando.
 
 La simulación permite editar el precio mensual base y de alta, y añadir:
 
