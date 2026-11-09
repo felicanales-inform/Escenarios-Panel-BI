@@ -1,41 +1,61 @@
 # Escenarios Panel BI
 
-Simulador interactivo de costos y ventas de un panel B2B, basado en `Costos Panel Bi.xlsx` y el documento de arquitectura de WorkforcePlus del 9 de noviembre de 2026. Publicado en https://escenarios-panel-bi.vercel.app/.
+Simulador de costos y ventas de un panel B2B. [Abrir aplicación](https://escenarios-panel-bi.vercel.app/).
 
-## Uso
+HTML autónomo, sin dependencias ni instalación. También puedes descargar `index.html` y abrirlo sin conexión. Los escenarios se guardan en el navegador; se pueden exportar/importar como JSON o descargar dentro de un HTML.
 
-Descarga `index.html` y ábrelo en un navegador. Funciona sin internet y no requiere instalación ni dependencias.
+## Vistas
 
-- Configura clientes o grupos por tamaño, cantidad y mes de incorporación.
-- Ajusta 141 parámetros del Excel, consumos, soporte, licencias y reglas de costos y venta.
-- Usa **Supuestos y variables** para calendario, perfiles, factores de escenarios y configuración del cloud compartido.
-- Usa **Detalle de costos** para one-time, soporte, operacional, mantenimiento, inversión y licencias, con entradas editables, resultados por grupo, distribución de costos y evolución del cloud.
-- Separa trabajo común de plataforma, costos por cliente y costos por capacidad.
-- Compara escenarios con precios de venta fijos y observa cambios de margen, incluso pérdidas.
-- Revisa costos totales y por cliente, evolución mensual, recuperación de inversión y sensibilidad.
-- Guarda y compara escenarios. Exporta/importa respaldos JSON o descarga un HTML con tus cambios.
+- **Vista general**, en azul: cartera, indicadores, escala, evolución y sensibilidad.
+- **Detalles de costos**, en turquesa: one-time, soporte, operacional, mantenimiento, inversión y licencias, con entradas editables y conciliación.
+- **Supuestos y variables**: perfiles, calendario, escenarios, infraestructura compartida y programación ETL/Power BI.
+- **Clientes y ventas**: cantidades, tamaños, mes de incorporación, licencias aportadas, precios fijos y excepciones.
+- **Clasificación y capacidad**: trabajo común, por cliente y por bloques de personal.
+- **Comparar escenarios**: los mismos precios fijos o los propios de cada alternativa.
+- **Cómo se calcula**: fórmulas, alcance y supuestos.
 
-## Base del modelo
+Cada modificación válida recalcula las vistas y muestra una confirmación. La notificación distingue cambios de resultados de cambios guardados que no alteran los importes. Los valores inválidos se rechazan. En escritorio, la barra lateral se desplaza de forma independiente.
 
-Los valores se expresan en USD, sin impuestos. Las tarifas son las del archivo de origen, sin actualización externa. La cartera inicial es un ejemplo: 5 clientes pequeños, 3 medianos y 2 grandes.
+## Modelo v4
 
-La clasificación inicial propone 2 horas comunes mensuales para cambios de API, parches y revisión de costos/respaldos, tomadas del perfil pequeño del Excel. Cada actividad se puede cambiar a trabajo individual por tamaño.
+Importes en USD, sin impuestos. La cartera inicial de ejemplo incluye 5 clientes pequeños, 3 medianos y 2 grandes. Tarifas, horas y precios de venta son supuestos editables; no representan una cotización comercial validada.
 
-**Todo el cloud es compartido.** La base usa una RDS PostgreSQL db.t4g.large Single-AZ, un gateway EC2 Windows t3.large, un NAT con IPv4 y una imagen ETL común. El mínimo de disco RDS se aplica a la plataforma y crece con los datos agregados. Fargate, tráfico, logs y secretos suman consumos generados por los clientes dentro de los servicios compartidos. El tráfico NAT incluye API entrante y Power BI saliente. El total cloud se cobra una sola vez y se reparte por igual solo para mostrar costos por cliente.
+### Recuperación de inversión del proyecto
 
-El perfil RDS y las cantidades de recursos se editan explícitamente; no se crean servidores ni NAT por cada diez clientes. Cinco empresas es la referencia presupuestaria de arquitectura, no un límite técnico ni una regla de autoescalado. Validar concurrencia, tiempos, capacidad y reintentos en un piloto. ECR usa Operacional!B38 como tamaño de imagen común; C38 y D38 quedan identificados como referencias originales sin efecto. Los auxiliares cloud (respaldos, alertas y otros cargos no estimados) se pueden presupuestar aparte; empiezan en 0 por falta de una tarifa documentada.
+La inversión se desembolsa una sola vez al inicio de la plataforma. Su objetivo de recuperación mensual es inversión/plazo, o una anualidad con tasa mensual si se define interés. El plazo corre desde el inicio del proyecto y no se reinicia al incorporar clientes. El objetivo existe incluso sin clientes; solo su reparto informativo usa los clientes activos del mes. Indicadores, gráficos y comparación utilizan la misma fórmula.
 
-Los costos comunes continúan desde el mes de inicio de plataforma, incluso sin clientes. El personal puede cobrarse por horas utilizadas o por bloques de capacidad: los bloques reemplazan el cargo por horas recurrentes para evitar duplicaciones. Las altas se contratan aparte por hora. El costo real del trabajo se puede ingresar separado de la tarifa comercial; si queda vacío, se utiliza la tarifa del Excel como referencia. En personal por bloques, se pueden definir horas útiles, costo mensual completo y número mínimo de bloques contratados.
+El resultado operativo excluye la recuperación; el resultado tras recuperación resta ese objetivo. El flujo acumulado descuenta la inversión inicial una sola vez y no vuelve a descontar las cuotas objetivo. Los ingresos de altas y sus costos se incluyen en el mes de incorporación.
 
-La venta comienza en modo fijo. Las tarifas iniciales son los mínimos originales del Excel, no precios comerciales recomendados. Las excepciones por cliente prevalecen sobre la tarifa por tamaño. Los precios fijos no cambian ante sobrecostos, variaciones de cartera o el término de la cuota de inversión. La cotización automática queda disponible, con una acción para fijar los precios calculados.
+### Power BI Pro o PPU
 
-En la comparación se pueden aplicar los precios fijos actuales a todas las alternativas o respetar los precios de cada escenario guardado. La comparación no modifica las versiones guardadas. Los escenarios v1/v2 se convierten a cloud compartido al cargarse, mostrando un aviso: conservan cartera, tarifas y supuestos de trabajo, pero sus resultados cloud cambian. La exportación usa `panel-b2b-v3`; la importación admite las tres versiones.
+Se puede elegir el plan global y editar sus tarifas. Referencias iniciales: Pro 14 USD y Premium por usuario 24 USD al mes por usuario, con pago anual, según [Microsoft](https://www.microsoft.com/en-us/microsoft-fabric/features/power-bi/pricing). El escenario nuevo usa PPU; los escenarios antiguos conservan su tarifa e identifican su plan anterior como Pro.
 
-El detalle por categorías concilia con los costos comunes/por cliente/por capacidad. En personal por bloques, soporte y mantenimiento distribuyen el costo contratado según demanda de horas, incluida capacidad ociosa; no agregan otro cargo por hora. Si no hay demanda, los bloques mínimos se muestran en otros costos. Las altas del mes y la inversión inicial aparecen separadas de la operación. La proyección descuenta la inversión una sola vez; no vuelve a descontar su cuota. Las licencias de autores de INFORM deben presupuestarse en otros costos comunes; los perfiles de 3/10/20 usuarios solo cubren lectores.
+Las licencias aportadas Pro no descuentan necesidades PPU. Las PPU aportadas son compatibles con ambos planes. Los autores de INFORM se presupuestan como costo común; comienzan en cero hasta ingresar la cantidad real. Si el cliente aporta las licencias, los lectores no generan costo para INFORM, pero deben disponer del plan compatible. La aplicación avisa si la frecuencia programada supera 8 refrescos diarios en Pro o 48 en PPU.
 
-En escritorio, la barra lateral tiene desplazamiento independiente, ajusta su altura al espacio visible y no arrastra la página al llegar a sus límites. En pantallas pequeñas vuelve al desplazamiento normal de página.
+### Cloud compartido y ETL
 
-La sección **Lógica y origen** documenta los cálculos, supuestos y limitaciones. Los cambios se guardan en el navegador cuando está disponible el almacenamiento local. El modelo no modifica el Excel original ni envía los escenarios a un servidor.
+La arquitectura de referencia usa RDS PostgreSQL db.t4g.large Single-AZ, gateway EC2 Windows t3.large, NAT con IPv4 e imagen ETL compartidos. El disco mínimo RDS se aplica a la plataforma y crece con los datos agregados. Las cantidades de servidores se configuran explícitamente; no se crean recursos individuales ni saltos automáticos por número de clientes. Cinco empresas es una referencia presupuestaria, no un límite técnico.
+
+Fargate suma tareas generadas por los clientes dentro de la infraestructura compartida:
+
+- Ciclos mensuales = 24 / intervalo ETL en horas × días del mes.
+- Intentos = ciclos × (1 + porcentaje de intentos adicionales / 100).
+- Segundos facturables por intento = máximo(60, redondeo superior de procesamiento + arranque/descarga).
+- Costo = intentos × segundos facturables / 3600 × (vCPU × tarifa/h + GB RAM × tarifa/h).
+
+El mínimo de un minuto y redondeo por segundo corresponden a [Fargate Linux/x86](https://aws.amazon.com/fargate/pricing/). Los 60 segundos iniciales de arranque son un ejemplo editable, no una medición. Los reintentos comienzan en 0% y suponen repetir la tarea completa. Ajustar ambos con mediciones del piloto.
+
+Los volúmenes de referencia de API, Power BI y logs corresponden a 240 ciclos al mes (cada 3 horas, 30 días). API y logs escalan con intentos ETL; la salida Power BI tiene una frecuencia independiente. NAT suma API entrante y salida Power BI; internet saliente considera esta última. No se incluye explícitamente una carga histórica inicial: presupuestarla aparte si es material. Las tarifas AWS son supuestos editables. Respaldos, alertas y otros cargos no estimados pueden ingresarse como auxiliares cloud; inicialmente están en cero.
+
+El cloud se cobra una sola vez y se reparte por igual únicamente para mostrar costos medios por cliente. El costo real depende del dimensionamiento y uso de toda la cartera.
+
+### Trabajo, capacidad y ventas
+
+Las actividades de mantenimiento pueden ser comunes o individuales. El personal puede costearse por horas o por bloques de capacidad; los bloques reemplazan el cargo por horas recurrentes. Las altas se contratan aparte. Soporte y mantenimiento distribuyen el costo de los bloques según su demanda; los bloques mínimos sin demanda quedan en otros costos.
+
+Los precios fijos no cambian ante sobrecostos, cambios de cartera o término de la recuperación. Las excepciones de cada grupo prevalecen sobre la tarifa por tamaño. La cotización automática aplica el margen objetivo y permite fijar después los precios calculados.
+
+La importación admite versiones v1–v4 y la exportación utiliza `panel-b2b-v4`. Las migraciones conservan cartera y supuestos comerciales; los cálculos se actualizan a las reglas actuales y se muestra un aviso. Las alternativas guardadas no se modifican al compararlas.
 
 ## Validación
 
@@ -45,4 +65,6 @@ Ejecuta con Node.js, sin instalar dependencias:
 node tests/model.test.cjs
 ```
 
-257 comprobaciones cubren recursos compartidos sin multiplicación por cliente, almacenamiento agregado, consumos, ausencia de saltos artificiales, conciliación de ambas clasificaciones, escenarios y meses, costos con cero clientes, precios fijos, personal por capacidad, inversión y migración v1/v2. Los totales antiguos del Excel se conservan como referencia histórica, no como resultado esperado del modelo corregido. Se verificaron en navegador la navegación, edición de soporte, cambio de mes, selección del RDS compartido, personal por bloques y los 141 campos de origen sin duplicaciones. No requiere dependencias.
+459 comprobaciones cubren inversión a nivel del proyecto, coincidencia entre gráfico e indicadores, clientes futuros, ausencia de clientes, inversión sin doble descuento, planes y licencias aportadas, autores comunes, mínimos y redondeo Fargate, frecuencias, reintentos, costos compartidos, bloques de personal, conciliación de categorías, ventas fijas y migración de escenarios.
+
+También se verificaron en navegador el cambio Pro/PPU, edición de frecuencia ETL, actualización de tráfico/logs/Fargate, notificaciones y navegación. Estas pruebas validan la lógica implementada; el dimensionamiento, tiempos y consumos presupuestados requieren validación operacional.

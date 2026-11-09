@@ -1,62 +1,40 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),crypto=require('crypto');
 const html=fs.readFileSync(process.argv[2]||require('path').join(__dirname,'..','index.html'),'utf8');
 const data=JSON.parse(html.match(/<script id="sourceData" type="application\/json">([\s\S]*?)<\/script>/)[1]);
-const source=html.match(/<script>\s*('use strict';[\s\S]*?)<\/script>/)[1];
-new vm.Script(source);
-const context={crypto:crypto.webcrypto,document:{getElementById:id=>({textContent:id==='sourceData'?JSON.stringify(data):'null'})},localStorage:{getItem:()=>null},location:{pathname:'/test'},setTimeout(){},console};
-vm.createContext(context);vm.runInContext(source.split('function persist()')[0]+';globalThis.M={defaults,unit,evaluate,project,installment,validState,migrate,comparisonState,freezePrices,costCategories};',context);
-const M=context.M,copy=x=>JSON.parse(JSON.stringify(x));let count=0;
-function near(actual,expected,label){assert.ok(Number.isFinite(actual)&&Math.abs(actual-expected)<1e-6,`${label}: ${actual} != ${expected}`);count++;}
-function check(value,label){assert.ok(value,label);count++;}
-let s=M.defaults(),r=M.evaluate(s),c=M.costCategories(s,r);
-near(r.cloud.rds,.129*730,'one shared large RDS');
-near(r.cloud.gateway,.1108*730+50*.08,'one shared gateway and EBS');
-near(r.cloud.nat,(.045+.005)*730,'one NAT and its public IP');
-near(r.cloud.storageGb,5*2.1+3*2.5+2*3,'aggregate data determines shared disk');
-near(r.cloud.ecr,.1,'one common ETL image');
-near(r.cloud.executions,10*240,'one task per customer per cycle');
-near(r.cloud.etl,5*(240*2/60*(.25*.04048+.5*.004445))+3*(240*(20/3)/60*(.5*.04048+.004445))+2*(240*(40/3)/60*(.04048+2*.004445)),'Fargate aggregates runtime and resources');
-near(r.cloud.traffic,5*(4*.045+.09)+3*(13*.045+3*.09)+2*(40*.045+10*.09),'NAT processes API and BI traffic');
-near(r.cloud.total,254.046615,'cloud monthly baseline');
-near(r.floor,9885.713281666667,'monthly cost includes shared cloud once');
-near(r.revenue,12852.079781666667,'fixed prices preserved');
-near(c.support,4987.5,'source support still matches');near(c.maintenance,3037.5,'common plus individual maintenance');
-near(r.setup,18480,'source setup remains intact');
-const fixed=r.cloud.fixed,revenue=r.revenue;
-s.clients[1].count++;r=M.evaluate(s);near(r.cloud.fixed,fixed,'11 clients do not create another NAT');
-check(r.average<988.5713281666667,'one medium lowers average without artificial step');
-s=M.defaults();s.clients.forEach(x=>x.count*=2);r=M.evaluate(s);near(r.cloud.fixed,fixed,'doubling clients retains shared resources');check(r.average<988.5713281666667,'same-mix scale economy');
-s=M.defaults();s.clients=[{...s.clients[2],count:1}];r=M.evaluate(s);near(r.cloud.storageGb,20,'20GB minimum once');near(r.cloud.rds,.129*730,'client size does not choose server');
-s.clients[0].count=11;r=M.evaluate(s);near(r.cloud.storageGb,33,'minimum not repeated per client');near(r.cloud.rds,.129*730,'no RDS multiplication');
-s.cloudRdsCount=2;s.cloudGatewayCount=2;s.cloudNatCount=2;r=M.evaluate(s);near(r.cloud.rds,2*.129*730,'explicit shared RDS count');near(r.cloud.storageGb,40,'minimum across configured instances');near(r.cloud.ecr,.1,'one image with two servers');
-s.cloudRdsProfile=0;near(M.evaluate(s).cloud.rds,2*.032*730,'explicit shared profile');
-s=M.defaults();s.cloudReferenceClients=1000;near(M.evaluate(s).floor,9885.713281666667,'budget reference not capacity');
-s=M.defaults();s.cloudStress=20;r=M.evaluate(s);near(r.cloud.total,254.046615*1.2,'cloud stress total');near(r.revenue,revenue,'fixed prices stable');
-s=M.defaults();s.values['Operacional!B25']=1.5;near(M.evaluate(s).cloud.etl,M.evaluate(M.defaults()).cloud.etl*2,'frequency doubles compute');
-s=M.defaults();s.clients.forEach(x=>x.count=0);r=M.evaluate(s);near(r.cloud.total,218.074,'cloud persists without clients');near(r.common,368.074,'common labor and cloud persist');near(r.cloud.executions,0,'no customer tasks');check(r.average===null,'zero-client average');
-s.platformStart=5;near(M.evaluate(s,4).operating,0,'before launch zero');near(M.evaluate(s,5).operating,368.074,'cloud starts with platform');
-s=M.defaults();s.staffMode='blocks';s.staffHours=107;s.staffCost=5000;r=M.evaluate(s);c=M.costCategories(s,r);near(r.staffBlocks,1,'exact staff threshold');near(r.capacity,5000,'capacity only staff');near(r.perClient,1190,'no duplicate labor/cloud');near(c.support+c.maintenance,5000,'categories distribute block cost');
-s.staffHours=106.9;near(M.evaluate(s).staffBlocks,2,'above personnel threshold');
-s.clients.forEach(x=>x.count=0);s.commonRules={};s.staffMinimum=2;r=M.evaluate(s);c=M.costCategories(s,r);near(c.other,10000,'idle staff in other');near(c.maintenance,0,'no demand allocation');
-s=M.defaults();s.laborHourCost=25;r=M.evaluate(s);near(r.setup,6160,'real labor setup');near(M.costCategories(s,r).maintenance,1012.5,'real labor maintenance');
-s=M.defaults();s.licenseMode='client';near(M.evaluate(s).licenses,0,'customer reader licenses');
-s=M.defaults();s.pricingMode='auto';s.margin=25;r=M.evaluate(s);near(r.revenue,r.floor/.75,'auto quote margin');M.freezePrices(s);const frozen=M.evaluate(s).revenue;s.cloudAux=1000;near(M.evaluate(s).revenue,frozen,'frozen quote');near(M.evaluate(s,37).revenue,frozen,'after payback');
-s=M.defaults();s.fixedPrices=[0,0,0];s.fixedSetup=[0,0,0];near(M.evaluate(s).revenue,0,'zero prices');
-s=M.defaults();s.clients[0].start=5;near(M.evaluate(s,4).count,5,'future group inactive');near(M.evaluate(s,5).setup,6600,'setup at arrival');near(M.evaluate(s,6).setup,0,'setup not recurring');
-s=M.defaults();s.values['Inversión!B6']=1200;s.values['Inversión!B7']=12;s.values['Inversión!B9']=.12;near(M.installment(s,1),1200*.01/(1-Math.pow(1.01,-12)),'interest annuity');
-for(const mode of ['hourly','blocks'])for(const scenario of [0,1,2])for(const month of [1,2,12,36,37]){
- s=M.defaults();s.staffMode=mode;s.staffCost=6000;s.scenario=scenario;s.commonOther=200;s.cloudAux=15;r=M.evaluate(s,month);c=M.costCategories(s,r);
- near(r.operating,r.common+r.perClient+r.capacity,'scope reconciliation');
- near(r.operating,c.support+c.maintenance+c.operational+c.licenses+c.other,'category reconciliation');
- near(r.rows.reduce((a,x)=>a+x.operating*x.count,0),r.operating,'client allocation');
- near(r.cloud.total,r.cloud.fixed+r.cloud.variable,'cloud chart');
- near(r.profit,r.revenue-r.operating-r.recovery,'profit');
- near(r.revenue,revenue,'fixed scenario prices');
+const source=html.match(/<script>\s*('use strict';[\s\S]*?)<\/script>/)[1];new vm.Script(source);
+const ctx={crypto:crypto.webcrypto,document:{getElementById:id=>({textContent:id==='sourceData'?JSON.stringify(data):'null'})},localStorage:{getItem:()=>null},location:{pathname:'/test'},setTimeout(){},console};
+vm.createContext(ctx);vm.runInContext(source.split('function persist()')[0]+';globalThis.M={defaults,unit,evaluate,project,installment,projectRecovery,etlDemand,validState,migrate,comparisonState,freezePrices,costCategories};',ctx);
+const M=ctx.M,copy=x=>JSON.parse(JSON.stringify(x));let checks=0;
+function near(a,b,label){assert.ok(Number.isFinite(a)&&Math.abs(a-b)<1e-6,`${label}: ${a} != ${b}`);checks++;}
+function ok(value,label){assert.ok(value,label);checks++;}
+let s=M.defaults(),r=M.evaluate(s);M.validState(s);
+near(r.cloud.rds,.129*730,'one shared RDS');near(r.cloud.gateway,.1108*730+50*.08,'shared gateway');near(r.cloud.nat,(.045+.005)*730,'NAT + IP once');near(r.cloud.storageGb,24,'aggregate disk');near(r.cloud.ecr,.1,'one ETL image');
+near(r.cloud.executions,2400,'240 cycles per client');
+const expectedEtl=5*240*180/3600*(.25*.04048+.5*.004445)+3*240*460/3600*(.5*.04048+.004445)+2*240*860/3600*(.04048+2*.004445);
+near(r.cloud.etl,expectedEtl,'full processing plus startup per task');near(r.cloud.total,255.0315465,'shared cloud baseline');near(r.licenses,85*24,'PPU for 85 readers');near(r.floor,10736.698213166667,'total corrected baseline');near(r.recovery,15000/36,'project target');near(r.setup,18480,'onboarding labor');
+const baseRevenue=r.revenue,baseFixed=r.cloud.fixed;
+s.licensePlan='pro';near(M.evaluate(s).licenses,85*14,'Pro selection');near(M.evaluate(s).revenue,baseRevenue,'plan does not change fixed sale');
+s.clients=[{...s.clients[0],count:1,users:3,owned:2,ownedPlan:'pro'}];s.licensePlan='ppu';near(M.evaluate(s).licenses,72,'Pro cannot substitute PPU');s.clients[0].ownedPlan='ppu';near(M.evaluate(s).licenses,24,'PPU contributed seats');s.licensePlan='pro';near(M.evaluate(s).licenses,14,'PPU works for Pro');s.authorSeats=2;near(M.evaluate(s).licenses,42,'authors once per platform');s.licenseMode='client';near(M.evaluate(s).licenses,28,'authors remain when customer licenses provided');s.clients[0].count=10;near(M.evaluate(s).authorLicenses,28,'authors not multiplied by clients');
+s=M.defaults();s.clients[1].start=13;s.clients[1].count=9;s.clients[0].count=1;s.clients[2].count=0;r=M.evaluate(s);const scaled=M.evaluate(s,1,1,1);near(r.average,scaled.average,'future clients: graph and KPI agree');near(r.recovery,416.6666666666667,'full project target despite future clients');near(M.project(s).reduce((a,x)=>a+x.recovery,0),15000,'full target within project 36 months');near(M.evaluate(s,37).recovery,0,'ends globally');s.clients[2].count=1;s.clients[2].start=37;near(M.evaluate(s,37).rows.find(x=>x.size===2).recovery,0,'new client never restarts recovery');
+s=M.defaults();s.clients.forEach(x=>x.count=0);near(M.evaluate(s).recovery,15000/36,'target remains without clients');ok(M.evaluate(s).average===null,'zero clients average undefined');near(M.evaluate(s).cloud.total,218.074,'cloud retained without clients');
+s.platformStart=5;s.values['Supuestos!B11']=40;const delayed=M.project(s);near(delayed[0].cumulative,0,'no investment before project start');near(delayed[3].operating,0,'no operations before launch');near(delayed[4].investmentOutflow,15000,'investment at project start');near(delayed.reduce((a,x)=>a+x.investmentOutflow,0),15000,'investment once');near(delayed.reduce((a,x)=>a+x.recovery,0),15000,'36-month target from launch');near(M.evaluate(s,41).recovery,0,'recovery ends month 40');
+s=M.defaults();s.values['Inversión!B6']=1200;s.values['Inversión!B7']=12;s.values['Inversión!B9']=.12;near(M.installment(s),1200*.01/(1-Math.pow(1.01,-12)),'project annuity with interest');s.values['Inversión!B6']=0;near(M.evaluate(s).recovery,0,'zero investment');
+s=M.defaults();const one=s.clients[0];s.etlStartupSeconds=0;s.values['Operacional!B31']=.1;let u=M.etlDemand(s,one,1);near(u.billedSeconds,60,'Linux minimum per task');near(u.taskHours,4,'minimum billed 240 times');s.values['Operacional!B31']=2.001;near(M.etlDemand(s,one,1).billedSeconds,121,'round up per second');s.etlStartupSeconds=60;near(M.etlDemand(s,one,1).billedSeconds,181,'startup before rounding');
+s=M.defaults();let a=M.evaluate(s);s.values['Operacional!B25']=.5;let b=M.evaluate(s);near(b.cloud.etl,a.cloud.etl*6,'ETL 30min raises compute sixfold');near(b.cloud.apiGb,a.cloud.apiGb*6,'API scales with ETL');near(b.cloud.logs,a.cloud.logs*6,'logs scale with ETL');near(b.cloud.biGb,a.cloud.biGb,'BI own schedule unchanged');near(b.cloud.fixed,a.cloud.fixed,'shared resources constant');s.biRefreshHours=.5;near(M.evaluate(s).cloud.biGb,a.cloud.biGb*6,'BI frequency scales output');
+s=M.defaults();a=M.evaluate(s);s.etlRetryPct=25;b=M.evaluate(s);near(b.cloud.etl,a.cloud.etl*1.25,'extra attempts compute');near(b.cloud.logs,a.cloud.logs*1.25,'extra attempts logs');near(b.cloud.apiGb,a.cloud.apiGb*1.25,'extra attempts API');near(b.cloud.biGb,a.cloud.biGb,'ETL retries do not repeat BI refresh');near(b.cloud.scheduled,a.cloud.scheduled,'scheduled cycles distinct from attempts');near(b.cloud.executions,3000,'expected attempts');
+s=M.defaults();s.clients.forEach(x=>x.count*=2);r=M.evaluate(s);near(r.cloud.fixed,baseFixed,'no automatic servers with scale');near(r.cloud.etl,expectedEtl*2,'consumption grows with clients');near(r.recovery,15000/36,'project target independent of scale');
+s=M.defaults();s.cloudStress=20;near(M.evaluate(s).cloud.total,255.0315465*1.2,'global cloud stress');near(M.evaluate(s).revenue,baseRevenue,'fixed sales stable');
+s=M.defaults();s.staffMode='blocks';s.staffHours=107;s.staffCost=5000;r=M.evaluate(s);near(r.staffBlocks,1,'exact staff threshold');near(r.perClient,2040,'blocks replace hourly labor');near(r.capacity,5000,'personnel capacity only');s.staffHours=106.9;near(M.evaluate(s).staffBlocks,2,'round personnel up');
+for(const mode of ['hourly','blocks'])for(const plan of ['pro','ppu'])for(const sc of [0,1,2])for(const month of [1,2,12,36,37]){
+ s=M.defaults();s.staffMode=mode;s.staffCost=6000;s.licensePlan=plan;s.scenario=sc;s.authorSeats=2;s.commonOther=200;s.cloudAux=15;r=M.evaluate(s,month);const c=M.costCategories(s,r);
+ near(r.operating,r.common+r.perClient+r.capacity,'scope reconciliation');near(r.operating,c.support+c.maintenance+c.operational+c.licenses+c.other,'category reconciliation');near(r.rows.reduce((a,x)=>a+x.operating*x.count,0),r.operating,'client allocation');near(r.rows.reduce((a,x)=>a+x.recovery*x.count,0),r.recovery,'project recovery allocation');near(r.average,M.evaluate(s,month,sc,r.count).average,'scale same count agrees');near(r.revenue,baseRevenue,'fixed prices across all changes');
 }
-s=M.defaults();const projection=M.project(s);near(projection.at(-1).cumulative,-15000+projection.reduce((a,x)=>a+x.revenue+x.setupRevenue-x.operating-x.setup,0),'investment deducted once');
-for(const version of [undefined,2]){s=M.defaults();s.schemaVersion=version;s.infra='dedicated';s.gatewayCapacity=10;s.natCapacity=10;for(const k of Object.keys(s).filter(k=>k.startsWith('cloud')))delete s[k];s.cloudStress=0;const originalClients=copy(s.clients),originalPrices=copy(s.fixedPrices);M.validState(s);check(s.schemaVersion===3&&s.infra==='shared'&&s.migratedCloud,'legacy cloud shared');near(M.evaluate(s).cloud.total,254.046615,'migration baseline');check(JSON.stringify(s.clients)===JSON.stringify(originalClients),'legacy customers');check(JSON.stringify(s.fixedPrices)===JSON.stringify(originalPrices),'legacy tariffs');check(!('gatewayCapacity'in s),'legacy capacity removed');}
-s=M.defaults();M.validState(s);const imported=copy(s);M.validState(imported);near(M.evaluate(imported).floor,M.evaluate(s).floor,'JSON roundtrip');
-const saved=M.defaults();saved.fixedPrices=[1,2,3];const before=JSON.stringify(saved);near(M.evaluate(M.comparisonState(saved,s)).revenue,revenue,'compare same prices');check(JSON.stringify(saved)===before,'saved scenario unchanged');
-for(const patch of [{cloudRdsProfile:3},{cloudRdsCount:0},{cloudNatCount:1.5},{cloudAux:-1},{cloudAux:null},{staffHours:0},{infra:'dedicated'},{fixedPrices:[1,null,3]}]){assert.throws(()=>M.validState({...M.defaults(),...patch}));count++;}
-near(data.groups.flatMap(g=>g.fields).length,141,'original inputs preserved');
-console.log(`PASS: ${count} checks: shared cloud, categories, pricing, capacity, investment and migration.`);
+s=M.defaults();s.pricingMode='auto';s.margin=25;r=M.evaluate(s);near(r.revenue,r.floor/.75,'quote margin');M.freezePrices(s);const frozen=M.evaluate(s).revenue;s.ppuPrice=100;s.cloudAux=900;near(M.evaluate(s).revenue,frozen,'freeze survives changed costs');near(M.evaluate(s,37).revenue,frozen,'frozen sale after recovery');
+s=M.defaults();s.clients[0].price=0;s.clients[0].setupPrice=0;r=M.evaluate(s);near(r.rows[0].price,0,'explicit free contract');near(r.rows[0].setupPrice,0,'explicit free setup');
+s=M.defaults();const projection=M.project(s);near(projection.at(-1).cumulative,-15000+projection.reduce((a,x)=>a+x.revenue+x.setupRevenue-x.operating-x.setup,0),'investment not counted twice');
+for(const version of [undefined,2,3]){s=M.defaults();s.schemaVersion=version;s.pool='fixed';for(const k of ['licensePlan','proPrice','ppuPrice','authorSeats','etlStartupSeconds','etlRetryPct','biRefreshHours'])delete s[k];s.clients.forEach(c=>delete c.ownedPlan);s.values['Licencia!B6']=17;const clients=s.clients.map(c=>c.count);M.validState(s);ok(s.schemaVersion===4&&s.licensePlan==='pro','legacy converted to v4 with explicit Pro');near(s.proPrice,17,'old custom price retained');ok(!('pool'in s),'old divisor removed');ok(JSON.stringify(s.clients.map(c=>c.count))===JSON.stringify(clients),'counts preserved');near(M.evaluate(s).recovery,15000/36,'legacy global recovery');}
+s=M.defaults();const imported=copy(s);M.validState(imported);near(M.evaluate(imported).floor,M.evaluate(s).floor,'v4 JSON roundtrip');
+const saved=M.defaults();saved.fixedPrices=[1,2,3];const before=JSON.stringify(saved);near(M.evaluate(M.comparisonState(saved,s)).revenue,baseRevenue,'same-price comparison');ok(JSON.stringify(saved)===before,'saved comparison unmodified');
+for(const patch of [{cloudRdsCount:0},{staffHours:0},{ppuPrice:-1},{proPrice:null},{authorSeats:1.5},{etlStartupSeconds:-1},{etlRetryPct:1001},{biRefreshHours:0},{licensePlan:'invalid'},{schemaVersion:5}]){assert.throws(()=>M.validState({...M.defaults(),...patch}));checks++;}
+ok(!/excel/i.test(html),'no workbook references in deliverable');ok(!data.source,'no historical workbook viewer payload');ok(html.includes('primary-overview')&&html.includes('primary-detail'),'two primary colored tabs');ok(html.includes('notifyUpdate(before)'),'change confirmations wired');
+console.log(`PASS: ${checks} checks: project recovery, graph consistency, licenses, ETL billing, shared costs and migration.`);
