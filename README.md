@@ -9,8 +9,7 @@ HTML autónomo, sin dependencias ni instalación. También puedes descargar `ind
 - **Vista general**, en azul: cartera, indicadores, escala, evolución y sensibilidad.
 - **Detalles de costos**, en turquesa: one-time, soporte, operacional, mantenimiento, inversión y licencias, con entradas editables y conciliación.
 - **Supuestos y variables**: calendario, escenarios, tarifas, mediciones de referencia e infraestructura compartida.
-- **Tamaños y precios**: parámetros y precios fijos únicos para pequeño, mediano y grande.
-- **Empresas**: nombre, tamaño, cantidad y mes de incorporación. Sus parámetros y precios se heredan del tamaño, sin excepciones individuales.
+- **Clientes por tamaño**: exactamente tres filas editables (pequeño, mediano y grande) para cantidad de empresas, mes de alta, EGC, tiendas, empleados, usuarios, plan BI, mensualidad y alta. Muestra GB estimados junto a empleados. La simulación individual permite explorar detalles; las referencias avanzadas están en Supuestos y variables.
 - **Clasificación y capacidad**: trabajo común, por cliente y por bloques de personal.
 - **Comparar escenarios**: los mismos precios fijos o los propios de cada alternativa.
 - **Simular una empresa**: EGC, tiendas, usuarios, plan, frecuencias ETL/BI, CPU/RAM, volumen, soporte, precios y margen. Tres tarjetas permiten cargar pequeño, mediano o grande, agregar una empresa hipotética a la cartera o evaluar la plataforma con una sola empresa.
@@ -18,9 +17,9 @@ HTML autónomo, sin dependencias ni instalación. También puedes descargar `ind
 
 Cada modificación válida recalcula las vistas y muestra una confirmación. La notificación distingue cambios de resultados de cambios guardados que no alteran los importes. Los valores inválidos se rechazan. En escritorio, la barra lateral se desplaza de forma independiente.
 
-## Modelo v6
+## Modelo v7
 
-Importes en USD, sin impuestos. La cartera inicial contiene 10 empresas individuales: 5 pequeñas, 3 medianas y 2 grandes. Todas las empresas de un mismo tamaño comparten mensualidad, alta, EGC, tiendas, usuarios y demás parámetros de ese tamaño. Cantidad mayor que uno representa empresas idénticas para escenarios masivos (hasta 500 filas). Tarifas, horas y precios de venta son supuestos editables; no representan una cotización comercial validada.
+Importes en USD, sin impuestos. La cartera inicial representa 10 empresas: 5 pequeñas, 3 medianas y 2 grandes, resumidas en tres filas. Todas las empresas de un mismo tamaño comparten mensualidad, alta, EGC, tiendas, usuarios y demás parámetros de ese tamaño. Cada fila representa empresas con el mismo tamaño. No se editan nombres ni se agregan filas individuales. Las cohortes anteriores se conservan internamente para no perder meses de alta: si un tamaño tiene varias fechas aparece “Varios”; asignar un mes unifica las fechas. Cambiar cantidades reparte los enteros proporcionalmente entre cohortes existentes, conservando el total elegido. Tarifas, horas y precios de venta son supuestos editables; no representan una cotización comercial validada.
 
 ### Recuperación de inversión del proyecto
 
@@ -58,13 +57,24 @@ El cloud se cobra una sola vez. Fargate, tráfico, logs, secretos y almacenamien
 Employee Group Containers (EGC) es la cantidad de bases de una empresa. Employee groups es su total de tiendas, no tiendas por EGC. Las cantidades se configuran por tamaño y se aplican a todas sus empresas. La simulación permite modificarlas temporalmente, sin cambiar la plantilla ni la cartera. Las referencias de medición cloud se conservan separadas para calibrar los consumos.
 
 - Proporción EGC = EGC reales / referencia EGC.
-- Proporción de volumen = tiendas reales / referencia tiendas × factor de volumen por tienda.
-- Tiempo de procesamiento = tiempo de referencia × (peso EGC × proporción EGC + peso volumen × proporción de volumen) × factor de escenario.
-- Logs usa la misma combinación con un peso EGC independiente.
+- Proporción de tiendas = tiendas reales / referencia tiendas.
+- Estructura relativa = peso EGC × proporción EGC + (1 − peso EGC) × proporción tiendas.
+- GB de archivo = empleados / empleados de la muestra × GB de la muestra × factor de información por empleado.
+- Proporción de volumen = GB de archivo / GB de archivo de referencia de medición del tamaño.
+- Tiempo de procesamiento = tiempo de referencia × (peso estructura × estructura relativa + peso volumen × proporción de volumen) × factor de escenario.
+- Logs usa la misma combinación con un peso de estructura independiente.
 - API y salida Power BI usan la proporción de volumen y sus respectivas frecuencias.
 - Disco = (datos iniciales + crecimiento × edad) × proporción de volumen + EGC × espacio adicional por base.
 
-Los pesos de EGC y volumen suman 100%; el usuario edita el peso EGC y su complemento se calcula automáticamente. Inicialmente son 50/50, una estimación sin medir. El espacio adicional por base inicia en cero hasta medirlo. EGC y tiendas afectan exclusivamente al cloud; no modifican soporte, mantenimiento, alta comercial, inversión ni licencias. CPU/RAM y servidores se configuran explícitamente, sin escalado automático.
+Los pesos de estructura y volumen suman 100%; el usuario edita estructura y su complemento se calcula automáticamente. Dentro de estructura, EGC y tiendas también suman 100%, con un peso EGC editable. Inicialmente son 50/50, una estimación sin medir. El espacio adicional por base inicia en cero hasta medirlo. Empleados, EGC y tiendas afectan exclusivamente al cloud; no modifican soporte, mantenimiento, alta comercial, inversión ni licencias. CPU/RAM y servidores se configuran explícitamente, sin escalado automático.
+
+### Empleados y GB de información
+
+La referencia aportada es **15.000 empleados ≈ 0,6 GB**. Se puede ajustar la muestra (empleados y GB) en Supuestos y variables; el factor de información por empleado permite representar mayor historial o más datos asociados. Ejemplos con factor 1: 1.000 → 0,040 GB; 5.000 → 0,200 GB; 15.000 → 0,600 GB; 30.000 → 1,200 GB.
+
+Pequeño, mediano y grande parten de 1.000, 5.000 y 15.000 empleados como ejemplos editables. Las referencias de archivo para los consumos medidos parten de 0,040, 0,200 y 0,600 GB. Son supuestos de calibración: deben ajustarse al archivo utilizado al medir tiempos, tráfico y almacenamiento. El archivo estimado no equivale directamente al tráfico mensual ni al disco final de la base de datos: esos cálculos conservan sus frecuencias, acumulación e infraestructura mínima compartida.
+
+Los empleados son el total de la empresa, distintos de los usuarios con licencia. Se usan una sola vez para determinar los GB; no se multiplican por tiendas o EGC. Estos últimos aportan complejidad estructural al procesamiento y logs. Más empleados ajusta la parte de volumen de Fargate/ETL, tráfico y almacenamiento; no cambia soporte, mantenimiento, licencias, inversión ni precios fijos. Ambos PDF incluyen empleados y GB estimados.
 
 ### PDF de una empresa
 
@@ -81,13 +91,13 @@ Las actividades de mantenimiento pueden ser comunes o individuales. En la tabla 
 
 Los precios fijos por tamaño no cambian ante sobrecostos, cambios de cartera o término de la recuperación. Son la única fuente de precios de la cartera. La cotización automática está disponible solo en la simulación de una empresa.
 
-La importación admite versiones v1–v6 y la exportación utiliza `panel-b2b-v6`. La migración conserva la cartera y las tarifas por tamaño, crea sus parámetros a partir de las referencias anteriores y archiva las antiguas excepciones por empresa en `legacyCompanyOverrides` y la simulación anterior en `legacySimulationV5`. Esos respaldos se exportan en JSON pero no intervienen en cálculos. Se muestra un aviso para revisar Tamaños y precios. Las alternativas guardadas no se modifican al compararlas.
+La importación admite versiones v1–v7 y la exportación utiliza `panel-b2b-v7`. La migración conserva la cartera y las tarifas por tamaño, crea sus parámetros a partir de las referencias anteriores y archiva las antiguas excepciones por empresa en `legacyCompanyOverrides` y la simulación anterior en `legacySimulationV5`. Esos respaldos se exportan en JSON pero no intervienen en cálculos. Se muestra un aviso para revisar Clientes por tamaño. La migración v6 a v7 agrega la referencia empleados/GB y cantidades de empleados de ejemplo, sin modificar tarifas de venta ni descartar el calendario anterior. Las cantidades iniciales migradas se ajustan proporcionalmente a las tiendas existentes; deben revisarse como estimaciones, no como mediciones. Las alternativas guardadas no se modifican al compararlas.
 
 ## Simulación y cobros extra
 
 Las tarjetas **Tamaño pequeño**, **Tamaño mediano** y **Tamaño grande** muestran los parámetros principales y precios de referencia. Pulsar una precarga todos sus parámetros, mensualidad, alta y precio por usuario adicional. Volver a pulsar la tarjeta seleccionada restaura la referencia vigente. Cada selección reinicia los ajustes temporales y los extras; editar una plantilla no sobrescribe una simulación que ya se está preparando.
 
-La simulación permite editar el precio mensual base y de alta, y añadir:
+La simulación separa los extras en tres bloques, cada uno con total cobrado al cliente y costo para INFORM. Permite editar el precio mensual base y de alta, y añadir:
 
 - Usuarios adicionales: cantidad × precio por usuario/mes. Se agregan a los usuarios incluidos y generan el costo de las licencias que INFORM deba comprar, considerando las licencias compatibles aportadas. El precio extra empieza con la tarifa de licencia como referencia comercial editable, sin margen implícito.
 - Servicio mensual adicional: nombre, cantidad, precio unitario y costo interno unitario; por ejemplo soporte ampliado.
@@ -95,7 +105,9 @@ La simulación permite editar el precio mensual base y de alta, y añadir:
 
 Mensualidad = base + usuarios extra + servicio mensual. Alta = base + adicionales de alta. Los costos internos de servicios parten en cero hasta presupuestarlos. Los cobros se redondean a centavos por línea. En cotización automática, el precio base excluye el costo incremental de usuarios extra; los extras se cobran separadamente para evitar duplicaciones.
 
-Ambos PDF detallan base y extras, con totales conciliados. El PDF comercial excluye costos y margen; el interno agrega costos de licencias, servicios y adicionales de alta. La simulación no modifica ni guarda excepciones en la cartera.
+La simulación indica USD (dólares estadounidenses), USD/mes para servicios recurrentes y USD por única vez para alta. Ambos PDF detallan base y extras, con totales conciliados. El PDF comercial excluye costos y margen; el interno agrega costos de licencias, servicios y adicionales de alta. La simulación no modifica ni guarda excepciones en la cartera.
+
+El resultado de la simulación separa formación de mensualidad, costos operativos con una explicación por concepto, objetivo de recuperación y resultado, y cobros/costos de alta por única vez. La distribución orientativa del precio base queda en un desplegable; no representa cargos adicionales.
 
 ## Validación
 
@@ -105,6 +117,6 @@ Ejecuta con Node.js, sin instalar dependencias:
 node tests/model.test.cjs
 ```
 
-Las comprobaciones cubren recuperación a nivel del proyecto, saldo pendiente, clientes futuros, ausencia de clientes, inversión sin doble descuento, planes y licencias aportadas, mínimos y redondeo Fargate, frecuencias, reintentos, costos compartidos, bloques de personal, conciliación de categorías, ventas fijas y migración.
+472 comprobaciones cubren recuperación a nivel del proyecto, saldo pendiente, clientes futuros, ausencia de clientes, inversión sin doble descuento, planes y licencias aportadas, mínimos y redondeo Fargate, frecuencias, reintentos, costos compartidos, bloques de personal, conciliación de categorías, ventas fijas y migración.
 
-También incluyen herencia por tamaño, exclusión de antiguos precios individuales, EGC/tiendas con impacto exclusivo en cloud, precarga de los tres tamaños, aislamiento de la simulación, extras sin duplicación, reemplazo de empresa y desglose comercial a centavos. Se comprueban en navegador la edición, precarga, notificaciones y exportación PDF; los PDF se renderizan y revisan visualmente. Estas verificaciones validan la lógica implementada; tiempos y consumos presupuestados requieren validación operacional.
+También incluyen conversión empleados/GB, calibración editable, ausencia de multiplicación por tiendas, efecto exclusivo en cloud, cantidades agrupadas y conservación del calendario, herencia por tamaño, exclusión de antiguos precios individuales, EGC/tiendas con impacto exclusivo en cloud, precarga de los tres tamaños, aislamiento de la simulación, extras sin duplicación, reemplazo de empresa y desglose comercial a centavos. Se comprueban en navegador la edición, precarga, notificaciones y exportación PDF; los PDF se renderizan y revisan visualmente. Estas verificaciones validan la lógica implementada; tiempos y consumos presupuestados requieren validación operacional.
