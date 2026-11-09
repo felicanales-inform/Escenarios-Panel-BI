@@ -8,8 +8,9 @@ HTML autónomo, sin dependencias ni instalación. También puedes descargar `ind
 
 - **Vista general**, en azul: cartera, indicadores, escala, evolución y sensibilidad.
 - **Detalles de costos**, en turquesa: one-time, soporte, operacional, mantenimiento, inversión y licencias, con entradas editables y conciliación.
-- **Supuestos y variables**: perfiles, calendario, escenarios, infraestructura compartida y programación ETL/Power BI.
-- **Empresas y ventas**: cantidades, tamaños, mes de incorporación, licencias aportadas, precios fijos y excepciones.
+- **Supuestos y variables**: calendario, escenarios, tarifas, mediciones de referencia e infraestructura compartida.
+- **Tamaños y precios**: parámetros y precios fijos únicos para pequeño, mediano y grande.
+- **Empresas**: nombre, tamaño, cantidad y mes de incorporación. Sus parámetros y precios se heredan del tamaño, sin excepciones individuales.
 - **Clasificación y capacidad**: trabajo común, por cliente y por bloques de personal.
 - **Comparar escenarios**: los mismos precios fijos o los propios de cada alternativa.
 - **Simular una empresa**: EGC, tiendas, usuarios, plan, frecuencias ETL/BI, CPU/RAM, volumen, soporte, precios y margen. Permite cargar una empresa, reemplazarla solo para el cálculo, agregar una empresa hipotética a la cartera o evaluar la plataforma con una sola empresa.
@@ -17,9 +18,9 @@ HTML autónomo, sin dependencias ni instalación. También puedes descargar `ind
 
 Cada modificación válida recalcula las vistas y muestra una confirmación. La notificación distingue cambios de resultados de cambios guardados que no alteran los importes. Los valores inválidos se rechazan. En escritorio, la barra lateral se desplaza de forma independiente.
 
-## Modelo v5
+## Modelo v6
 
-Importes en USD, sin impuestos. La cartera inicial contiene 10 empresas individuales: 5 pequeñas, 3 medianas y 2 grandes. Cada empresa tiene mensualidad, alta, EGC y tiendas propios. Cantidad mayor que uno representa empresas idénticas para escenarios masivos; el botón Separar empresas permite personalizarlas (hasta 500 filas). Tarifas, horas y precios de venta son supuestos editables; no representan una cotización comercial validada.
+Importes en USD, sin impuestos. La cartera inicial contiene 10 empresas individuales: 5 pequeñas, 3 medianas y 2 grandes. Todas las empresas de un mismo tamaño comparten mensualidad, alta, EGC, tiendas, usuarios y demás parámetros de ese tamaño. Cantidad mayor que uno representa empresas idénticas para escenarios masivos (hasta 500 filas). Tarifas, horas y precios de venta son supuestos editables; no representan una cotización comercial validada.
 
 ### Recuperación de inversión del proyecto
 
@@ -31,7 +32,7 @@ La tarjeta principal **Inversión pendiente de recuperar** muestra máximo(0, �
 
 ### Power BI Pro o PPU
 
-Se puede elegir el plan global y editar sus tarifas. Referencias iniciales: Pro 14 USD y Premium por usuario 24 USD al mes por usuario, con pago anual, según [Microsoft](https://www.microsoft.com/en-us/microsoft-fabric/features/power-bi/pricing). El escenario nuevo usa PPU; los escenarios antiguos conservan su tarifa e identifican su plan anterior como Pro.
+Se elige Pro o PPU por tamaño; las tarifas de costo son comunes y editables. Referencias iniciales: Pro 14 USD y Premium por usuario 24 USD al mes por usuario, con pago anual, según [Microsoft](https://www.microsoft.com/en-us/microsoft-fabric/features/power-bi/pricing). El escenario nuevo usa PPU; los escenarios antiguos conservan su tarifa e identifican su plan anterior como Pro.
 
 Las licencias aportadas Pro no descuentan necesidades PPU. Las PPU aportadas son compatibles con ambos planes. Los autores de INFORM se presupuestan como costo común; comienzan en cero hasta ingresar la cantidad real. Si el cliente aporta las licencias, los lectores no generan costo para INFORM, pero deben disponer del plan compatible. La aplicación avisa si la frecuencia programada supera 8 refrescos diarios en Pro o 48 en PPU.
 
@@ -54,7 +55,7 @@ El cloud se cobra una sola vez. Fargate, tráfico, logs, secretos y almacenamien
 
 ### EGC y employee groups
 
-Employee Group Containers (EGC) es la cantidad de bases de una empresa. Employee groups es su total de tiendas, no tiendas por EGC. Las cantidades por empresa vacías heredan referencias del perfil, y se pueden personalizar sin cambiar su perfil de trabajo.
+Employee Group Containers (EGC) es la cantidad de bases de una empresa. Employee groups es su total de tiendas, no tiendas por EGC. Las cantidades se configuran por tamaño y se aplican a todas sus empresas. La simulación permite modificarlas temporalmente, sin cambiar la plantilla ni la cartera. Las referencias de medición cloud se conservan separadas para calibrar los consumos.
 
 - Proporción EGC = EGC reales / referencia EGC.
 - Proporción de volumen = tiendas reales / referencia tiendas × factor de volumen por tienda.
@@ -78,9 +79,23 @@ La distribución comercial es proporcional al peso de los componentes del servic
 
 Las actividades de mantenimiento pueden ser comunes o individuales. En la tabla de clasificación, el alcance Por cliente permite editar directamente las horas mensuales para pequeño, mediano y grande; los campos están sincronizados con Detalles de costos. En alcance Común se editan las horas únicas de la plataforma y se excluyen las horas individuales. El personal puede costearse por horas o por bloques de capacidad; los bloques reemplazan el cargo por horas recurrentes. Las altas se contratan aparte. Soporte y mantenimiento distribuyen el costo de los bloques según su demanda; los bloques mínimos sin demanda quedan en otros costos.
 
-Los precios fijos no cambian ante sobrecostos, cambios de cartera o término de la recuperación. Las excepciones de cada grupo prevalecen sobre la tarifa por tamaño. La cotización automática aplica el margen objetivo y permite fijar después los precios calculados.
+Los precios fijos por tamaño no cambian ante sobrecostos, cambios de cartera o término de la recuperación. Son la única fuente de precios de la cartera. La cotización automática está disponible solo en la simulación de una empresa.
 
-La importación admite versiones v1–v5 y la exportación utiliza `panel-b2b-v5`. Las migraciones conservan cartera y supuestos comerciales; los cálculos se actualizan a las reglas actuales y se muestra un aviso. Las alternativas guardadas no se modifican al compararlas.
+La importación admite versiones v1–v6 y la exportación utiliza `panel-b2b-v6`. La migración conserva la cartera y las tarifas por tamaño, crea sus parámetros a partir de las referencias anteriores y archiva las antiguas excepciones por empresa en `legacyCompanyOverrides` y la simulación anterior en `legacySimulationV5`. Esos respaldos se exportan en JSON pero no intervienen en cálculos. Se muestra un aviso para revisar Tamaños y precios. Las alternativas guardadas no se modifican al compararlas.
+
+## Simulación y cobros extra
+
+Seleccionar pequeño, mediano o grande precarga todos los parámetros, mensualidad, alta y precio por usuario adicional. **Recargar tamaño** restaura la referencia vigente. Ambas acciones reinician los ajustes temporales y los extras; editar una plantilla no sobrescribe una simulación que ya se está preparando.
+
+La simulación permite editar el precio mensual base y de alta, y añadir:
+
+- Usuarios adicionales: cantidad × precio por usuario/mes. Se agregan a los usuarios incluidos y generan el costo de las licencias que INFORM deba comprar, considerando las licencias compatibles aportadas. El precio extra empieza con la tarifa de licencia como referencia comercial editable, sin margen implícito.
+- Servicio mensual adicional: nombre, cantidad, precio unitario y costo interno unitario; por ejemplo soporte ampliado.
+- Adicional de alta: nombre, cantidad, precio unitario y costo interno unitario; por ejemplo implementación especial.
+
+Mensualidad = base + usuarios extra + servicio mensual. Alta = base + adicionales de alta. Los costos internos de servicios parten en cero hasta presupuestarlos. Los cobros se redondean a centavos por línea. En cotización automática, el precio base excluye el costo incremental de usuarios extra; los extras se cobran separadamente para evitar duplicaciones.
+
+Ambos PDF detallan base y extras, con totales conciliados. El PDF comercial excluye costos y margen; el interno agrega costos de licencias, servicios y adicionales de alta. La simulación no modifica ni guarda excepciones en la cartera.
 
 ## Validación
 
@@ -88,9 +103,8 @@ Ejecuta con Node.js, sin instalar dependencias:
 
 ```sh
 node tests/model.test.cjs
-node tests/company.test.cjs
 ```
 
-910 comprobaciones cubren inversión a nivel del proyecto, saldo pendiente con excedentes y pérdidas, coincidencia entre gráfico e indicadores, clientes futuros, ausencia de clientes, inversión sin doble descuento, planes y licencias aportadas, autores comunes, mínimos y redondeo Fargate, frecuencias, reintentos, costos compartidos, bloques de personal, conciliación de categorías, ventas fijas y migración de escenarios.
+Las comprobaciones cubren recuperación a nivel del proyecto, saldo pendiente, clientes futuros, ausencia de clientes, inversión sin doble descuento, planes y licencias aportadas, mínimos y redondeo Fargate, frecuencias, reintentos, costos compartidos, bloques de personal, conciliación de categorías, ventas fijas y migración.
 
-Las nuevas pruebas incluyen EGC/tiendas independientes, impacto solo en cloud, pesos, conciliación por empresa, aislamiento de la simulación, reemplazo de empresa, precio manual y automático, y desglose comercial a centavos. También se verifican edición de mantenimiento, cantidades y pesos en navegador, y PDFs con y sin costos. Los PDF se renderizan y se revisan visualmente. Estas pruebas validan la lógica implementada; el dimensionamiento, tiempos y consumos presupuestados requieren validación operacional.
+También incluyen herencia por tamaño, exclusión de antiguos precios individuales, EGC/tiendas con impacto exclusivo en cloud, precarga de los tres tamaños, aislamiento de la simulación, extras sin duplicación, reemplazo de empresa y desglose comercial a centavos. Se comprueban en navegador la edición, precarga, notificaciones y exportación PDF; los PDF se renderizan y revisan visualmente. Estas verificaciones validan la lógica implementada; tiempos y consumos presupuestados requieren validación operacional.
