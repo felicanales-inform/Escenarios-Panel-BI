@@ -1,122 +1,81 @@
 # Escenarios Panel BI
 
-Simulador de costos y ventas de un panel B2B. [Abrir aplicación](https://escenarios-panel-bi.vercel.app/).
+[Abrir aplicación](https://escenarios-panel-bi.vercel.app/) · Simulador de costos y venta B2B en USD, sin impuestos.
 
-HTML autónomo, sin dependencias ni instalación. También puedes descargar `index.html` y abrirlo sin conexión. Los escenarios se guardan en el navegador; se pueden exportar/importar como JSON o descargar dentro de un HTML. La exportación PDF usa jsPDF 4.2.1 incluido en el HTML, sin conexión; licencia MIT en `LICENSE-jsPDF.txt`.
+HTML autónomo, también utilizable sin conexión. Guarda datos en el navegador y permite exportar/importar JSON, descargar un HTML personalizado y generar PDF con jsPDF 4.2.1 incluido (licencia MIT en `LICENSE-jsPDF.txt`).
 
-## Vistas
+## Modelo v8
 
-- **Vista general**, en azul: cartera, indicadores, escala, evolución y sensibilidad.
-- **Detalles de costos**, en turquesa: one-time, soporte, operacional, mantenimiento, inversión y licencias, con entradas editables y conciliación.
-- **Supuestos y variables**: calendario, escenarios, tarifas, mediciones de referencia e infraestructura compartida.
-- **Clientes por tamaño**: exactamente tres filas editables (pequeño, mediano y grande) para cantidad de empresas, mes de alta, EGC, tiendas, empleados, usuarios, plan BI, mensualidad y alta. Muestra GB estimados junto a empleados. La simulación individual permite explorar detalles; las referencias avanzadas están en Supuestos y variables.
-- **Clasificación y capacidad**: trabajo común, por cliente y por bloques de personal.
-- **Comparar escenarios**: los mismos precios fijos o los propios de cada alternativa.
-- **Simular una empresa**, con acceso independiente destacado junto a las vistas principales: EGC, tiendas, usuarios, plan, frecuencias ETL/BI, CPU/RAM, volumen, soporte, precios y margen. Tres tarjetas permiten cargar pequeño, mediano o grande, agregar una empresa hipotética a la cartera o evaluar la plataforma con una sola empresa.
-- **Cómo se calcula**: fórmulas, alcance y supuestos.
+**Tamaños y empresas** es el único lugar para editar perfiles y precios. Pequeño, mediano y grande tienen cantidades de empresas, empleados, Employee Group Containers, employee groups, usuarios, plan BI, mensualidad y precio one-time. Cada empresa específica copia un tamaño y posee un perfil independiente: una casilla determina si cuenta como 0 o 1. Todas comienzan en el mes 1.
 
-Cada modificación válida recalcula las vistas y muestra una confirmación. La notificación distingue cambios de resultados de cambios guardados que no alteran los importes. Los valores inválidos se rechazan. En escritorio, la barra lateral se desplaza de forma independiente.
+Soporte, mantenimiento e implementación se definen en **días hombre**. La única variable en Tarifa y calendario es la tarifa diaria; la jornada es de 8 horas. Las demás referencias de calendario permanecen fijas. El ejemplo inicial usa US$600/día:
 
-## Modelo v7
+| Trabajo | Pequeño | Mediano | Grande |
+|---|---:|---:|---:|
+| Setup cloud, días | 1 | 1 | 2 |
+| Configuración BI, días | 3 | 3 | 3 |
+| Costo de implementación USD | 2.400 | 2.400 | 3.000 |
+| Soporte, días/mes | 0,3 | 0,3 | 0,5 |
+| Mantenimiento por empresa, días/mes | 0 | 0 | 0 |
 
-Importes en USD, sin impuestos. La cartera inicial representa 10 empresas: 5 pequeñas, 3 medianas y 2 grandes, resumidas en tres filas. Todas las empresas de un mismo tamaño comparten mensualidad, alta, EGC, tiendas, usuarios y demás parámetros de ese tamaño. Cada fila representa empresas con el mismo tamaño. No se editan nombres ni se agregan filas individuales. Las cohortes anteriores se conservan internamente para no perder meses de alta: si un tamaño tiene varias fechas aparece “Varios”; asignar un mes unifica las fechas. Cambiar cantidades reparte los enteros proporcionalmente entre cohortes existentes, conservando el total elegido. Tarifas, horas y precios de venta son supuestos editables; no representan una cotización comercial validada.
+El mantenimiento común de plataforma se presupuesta una vez, inicialmente 0,25 días/mes. Los días y precios son estimaciones editables, no una cotización contractual. Los precios comerciales son fijos y no se recalculan al aumentar costos.
 
-### Recuperación de inversión del proyecto
+### Escenarios
 
-La inversión se desembolsa una sola vez al inicio de la plataforma. Su objetivo de recuperación mensual es inversión/plazo, o una anualidad con tasa mensual si se define interés. El plazo corre desde el inicio del proyecto y no se reinicia al incorporar clientes. El objetivo existe incluso sin clientes; solo su reparto informativo usa los clientes activos del mes. Indicadores, gráficos y comparación utilizan la misma fórmula.
+- **Base:** valores configurados.
+- **Optimista:** costos × 0,8.
+- **Conservador:** costos × 1,2.
 
-El resultado operativo excluye la recuperación; el resultado tras recuperación resta ese objetivo. El flujo acumulado descuenta la inversión inicial una sola vez y no vuelve a descontar las cuotas objetivo. Los ingresos de altas y sus costos se incluyen en el mes de incorporación.
+El ajuste afecta costos cloud, otros operacionales comunes, soporte, mantenimiento e implementación. No modifica licencias, inversión, precios ni consumos técnicos. Los días equivalentes mostrados reflejan el factor del escenario. Las configuraciones guardadas permiten comparar precios propios o aplicar los precios actuales a perfiles coincidentes; empresas específicas se identifican mediante un ID estable.
 
-La tarjeta principal **Inversión pendiente de recuperar** muestra máximo(0, −resultado acumulado) al cierre del mes seleccionado. Disminuye con excedentes, puede superar la inversión inicial si se acumulan pérdidas y llega a cero cuando se cubre el saldo. Antes del desembolso indica que la inversión aún no se ha realizado. El saldo no se reduce artificialmente por la cuota objetivo de recuperación.
+### Simulación de una empresa
 
-### Power BI Pro o PPU
+Tres tarjetas cargan los tamaños estándar; un selector carga empresas específicas existentes. Parámetros, precio base, mes y escenario son de solo lectura. Solo se editan usuarios adicionales, su precio mensual y trabajos extra con nombre y horas.
 
-Se elige Pro o PPU por tamaño; las tarifas de costo son comunes y editables. Referencias iniciales: Pro 14 USD y Premium por usuario 24 USD al mes por usuario, con pago anual, según [Microsoft](https://www.microsoft.com/en-us/microsoft-fabric/features/power-bi/pricing). El escenario nuevo usa PPU; los escenarios antiguos conservan su tarifa e identifican su plan anterior como Pro.
+`Trabajo extra = horas / 8 × tarifa día hombre`
 
-Las licencias aportadas Pro no descuentan necesidades PPU. Las PPU aportadas son compatibles con ambos planes. Los autores de INFORM se presupuestan como costo común; comienzan en cero hasta ingresar la cantidad real. Si el cliente aporta las licencias, los lectores no generan costo para INFORM, pero deben disponer del plan compatible. La aplicación avisa si la frecuencia programada supera 8 refrescos diarios en Pro o 48 en PPU.
+Este valor se suma al costo y al precio de implementación por única vez, sin margen adicional ni un segundo factor de escenario. Los usuarios adicionales suman el precio ingresado y el costo de las licencias faltantes compatibles. Si se carga una empresa activa, la simulación la reemplaza temporalmente para no duplicarla; si está inactiva o es un tamaño estándar, agrega una empresa hipotética. No modifica la cartera.
 
-### Cloud compartido y ETL
+Las tarjetas **Implementación** y **Suscripción** actualizan los precios en vivo. El precio base de implementación se distribuye entre sus tareas proporcionalmente a los días, con conciliación a centavos. El detalle interno se mantiene en un desplegable. El PDF tiene dos modos: solo precio, o precio y costos internos.
 
-La arquitectura de referencia usa RDS PostgreSQL db.t4g.large Single-AZ, gateway EC2 Windows t3.large, NAT con IPv4 e imagen ETL compartidos. El disco mínimo RDS se aplica a la plataforma y crece con los datos agregados. Las cantidades de servidores se configuran explícitamente; no se crean recursos individuales ni saltos automáticos por número de clientes. Cinco empresas es una referencia presupuestaria, no un límite técnico.
+### Cloud y empleados
 
-Fargate suma tareas generadas por los clientes dentro de la infraestructura compartida:
+La infraestructura siempre es compartida. RDS, gateway, NAT e imagen ETL se cobran por los recursos configurados, sin crear servidores por empresa. El disco presupuestado es el máximo entre el mínimo configurado y los datos agregados. Los consumos propios se asignan a cada empresa; los cargos comunes y el disco mínimo no utilizado se reparten entre empresas activas.
 
-- Ciclos mensuales = 24 / intervalo ETL en horas × días del mes.
-- Intentos = ciclos × (1 + porcentaje de intentos adicionales / 100).
-- Segundos facturables por intento = máximo(60, redondeo superior de procesamiento + arranque/descarga).
-- Costo = intentos × segundos facturables / 3600 × (vCPU × tarifa/h + GB RAM × tarifa/h).
+Referencia de archivo: **15.000 empleados ≈ 0,6 GB**. EGC y tiendas ajustan la estructura de procesamiento; no multiplican empleados ni usuarios con licencia. Se mantienen las referencias técnicas y parámetros avanzados previamente configurados, ahora fijos en la interfaz.
 
-El mínimo de un minuto y redondeo por segundo corresponden a [Fargate Linux/x86](https://aws.amazon.com/fargate/pricing/). Los 60 segundos iniciales de arranque son un ejemplo editable, no una medición. Los reintentos comienzan en 0% y suponen repetir la tarea completa. Ajustar ambos con mediciones del piloto.
+Fargate: ciclos mensuales = 24 / frecuencia × días; intentos = ciclos × (1 + reintentos%). Cada intento suma procesamiento y arranque, redondea al segundo superior y factura al menos 60 segundos. Costo = horas facturables × (vCPU × tarifa vCPU-h + RAM × tarifa GB-h). ETL y BI tienen frecuencias independientes. Las horas técnicas de cloud permanecen porque son unidades de facturación, no trabajo humano.
 
-Los volúmenes de referencia de API, Power BI y logs corresponden a 240 ciclos al mes (cada 3 horas, 30 días). API y logs escalan con intentos ETL; la salida Power BI tiene una frecuencia independiente. NAT suma API entrante y salida Power BI; internet saliente considera esta última. No se incluye explícitamente una carga histórica inicial: presupuestarla aparte si es material. Las tarifas AWS son supuestos editables. Respaldos, alertas y otros cargos no estimados pueden ingresarse como auxiliares cloud; inicialmente están en cero.
+### Licencias e inversión
 
-El cloud se cobra una sola vez. Fargate, tráfico, logs, secretos y almacenamiento utilizado se atribuyen a la empresa que genera el consumo. Los cargos comunes y la capacidad mínima de almacenamiento sobrante se reparten por igual entre empresas activas. Contingencia y variación cloud se aplican una vez y la suma atribuida concilia con el total de la plataforma.
+Pro/PPU se selecciona por perfil. Las licencias aportadas Pro cubren Pro; PPU cubre ambos planes. Autores INFORM se presupuestan una vez para la plataforma. Si el cliente compra todas sus licencias, INFORM no incurre en costo de lectores.
 
-### EGC y employee groups
+La inversión se desembolsa una sola vez al inicio. La meta mensual se calcula para el proyecto, con inversión/plazo o anualidad si hay tasa, y termina al completar el plazo. Su reparto por empresa es informativo. El flujo acumulado no vuelve a descontar esta meta. Inversión pendiente = máximo(0, −resultado acumulado): disminuye con excedentes y puede aumentar con pérdidas.
 
-Employee Group Containers (EGC) es la cantidad de bases de una empresa. Employee groups es su total de tiendas, no tiendas por EGC. Las cantidades se configuran por tamaño y se aplican a todas sus empresas. La simulación permite modificarlas temporalmente, sin cambiar la plantilla ni la cartera. Las referencias de medición cloud se conservan separadas para calibrar los consumos.
+## Vistas y guardado
 
-- Proporción EGC = EGC reales / referencia EGC.
-- Proporción de tiendas = tiendas reales / referencia tiendas.
-- Estructura relativa = peso EGC × proporción EGC + (1 − peso EGC) × proporción tiendas.
-- GB de archivo = empleados / empleados de la muestra × GB de la muestra × factor de información por empleado.
-- Proporción de volumen = GB de archivo / GB de archivo de referencia de medición del tamaño.
-- Tiempo de procesamiento = tiempo de referencia × (peso estructura × estructura relativa + peso volumen × proporción de volumen) × factor de escenario.
-- Logs usa la misma combinación con un peso de estructura independiente.
-- API y salida Power BI usan la proporción de volumen y sus respectivas frecuencias.
-- Disco = (datos iniciales + crecimiento × edad) × proporción de volumen + EGC × espacio adicional por base.
+- Vista general: indicadores, escala y evolución del proyecto.
+- Detalles de costos: desglose de implementación, soporte, mantenimiento, operación, inversión y licencias, en solo lectura.
+- Tamaños y empresas: edición centralizada de perfiles.
+- Supuestos generales: tarifa diaria, costos comunes, inversión, licencias e infraestructura.
+- Comparar escenarios: Base, Optimista y Conservador y configuraciones guardadas.
+- Simular una empresa: acceso independiente, cotización en vivo y exportación PDF.
 
-Los pesos de estructura y volumen suman 100%; el usuario edita estructura y su complemento se calcula automáticamente. Dentro de estructura, EGC y tiendas también suman 100%, con un peso EGC editable. Inicialmente son 50/50, una estimación sin medir. El espacio adicional por base inicia en cero hasta medirlo. Empleados, EGC y tiendas afectan exclusivamente al cloud; no modifican soporte, mantenimiento, alta comercial, inversión ni licencias. CPU/RAM y servidores se configuran explícitamente, sin escalado automático.
+Los cambios válidos recalculan las vistas y muestran confirmación. La barra lateral mantiene desplazamiento independiente en escritorio.
 
-### Empleados y GB de información
-
-La referencia aportada es **15.000 empleados ≈ 0,6 GB**. Se puede ajustar la muestra (empleados y GB) en Supuestos y variables; el factor de información por empleado permite representar mayor historial o más datos asociados. Ejemplos con factor 1: 1.000 → 0,040 GB; 5.000 → 0,200 GB; 15.000 → 0,600 GB; 30.000 → 1,200 GB.
-
-Pequeño, mediano y grande parten de 1.000, 5.000 y 15.000 empleados como ejemplos editables. Las referencias de archivo para los consumos medidos parten de 0,040, 0,200 y 0,600 GB. Son supuestos de calibración: deben ajustarse al archivo utilizado al medir tiempos, tráfico y almacenamiento. El archivo estimado no equivale directamente al tráfico mensual ni al disco final de la base de datos: esos cálculos conservan sus frecuencias, acumulación e infraestructura mínima compartida.
-
-Los empleados son el total de la empresa, distintos de los usuarios con licencia. Se usan una sola vez para determinar los GB; no se multiplican por tiendas o EGC. Estos últimos aportan complejidad estructural al procesamiento y logs. Más empleados ajusta la parte de volumen de Fargate/ETL, tráfico y almacenamiento; no cambia soporte, mantenimiento, licencias, inversión ni precios fijos. Ambos PDF incluyen empleados y GB estimados.
-
-### PDF de una empresa
-
-El selector **Contenido del PDF** permite descargar:
-
-- **Solo desglose de precio**: mensualidad, alta, suma del mes con alta, distribución comercial del precio y parametrización relevante. Excluye costos, margen, recuperación interna y tarifas de infraestructura.
-- **Precio y costos internos**: agrega el desglose operativo y cloud, meta de recuperación asignada, resultado mensual, supuestos y tarifas aplicadas.
-
-La distribución comercial es proporcional al peso de los componentes del servicio; no son tarifas de venta independientes. El reparto a centavos concilia exactamente con la mensualidad, incluidos precios manuales y gratuitos. El simulador y el PDF usan la misma función de cálculo. La empresa simulada no modifica la cartera, y su configuración se guarda dentro del escenario.
-
-### Trabajo, capacidad y ventas
-
-Las actividades de mantenimiento pueden ser comunes o individuales. En la tabla de clasificación, el alcance Por cliente permite editar directamente las horas mensuales para pequeño, mediano y grande; los campos están sincronizados con Detalles de costos. En alcance Común se editan las horas únicas de la plataforma y se excluyen las horas individuales. El personal puede costearse por horas o por bloques de capacidad; los bloques reemplazan el cargo por horas recurrentes. Las altas se contratan aparte. Soporte y mantenimiento distribuyen el costo de los bloques según su demanda; los bloques mínimos sin demanda quedan en otros costos.
-
-Los precios fijos por tamaño no cambian ante sobrecostos, cambios de cartera o término de la recuperación. Son la única fuente de precios de la cartera. La cotización automática está disponible solo en la simulación de una empresa.
-
-La importación admite versiones v1–v7 y la exportación utiliza `panel-b2b-v7`. La migración conserva la cartera y las tarifas por tamaño, crea sus parámetros a partir de las referencias anteriores y archiva las antiguas excepciones por empresa en `legacyCompanyOverrides` y la simulación anterior en `legacySimulationV5`. Esos respaldos se exportan en JSON pero no intervienen en cálculos. La vista general no muestra avisos de migración; los supuestos se consultan en Clientes por tamaño y Supuestos y variables. La migración v6 a v7 agrega la referencia empleados/GB y cantidades de empleados de ejemplo, sin modificar tarifas de venta ni descartar el calendario anterior. Las cantidades iniciales migradas se ajustan proporcionalmente a las tiendas existentes; deben revisarse como estimaciones, no como mediciones. Las alternativas guardadas no se modifican al compararlas.
-
-## Simulación y cobros extra
-
-Las tarjetas **Tamaño pequeño**, **Tamaño mediano** y **Tamaño grande** muestran los parámetros principales y precios de referencia. Pulsar una precarga todos sus parámetros, mensualidad, alta y precio por usuario adicional. Volver a pulsar la tarjeta seleccionada restaura la referencia vigente. Cada selección reinicia los ajustes temporales y los extras; editar una plantilla no sobrescribe una simulación que ya se está preparando.
-
-La simulación separa los extras en tres bloques, cada uno con total cobrado al cliente y costo para INFORM. Permite editar el precio mensual base y de alta, y añadir:
-
-- Usuarios adicionales: cantidad × precio por usuario/mes. Se agregan a los usuarios incluidos y generan el costo de las licencias que INFORM deba comprar, considerando las licencias compatibles aportadas. El precio extra empieza con la tarifa de licencia como referencia comercial editable, sin margen implícito.
-- Servicio mensual adicional: nombre, cantidad, precio unitario y costo interno unitario; por ejemplo soporte ampliado.
-- Adicional de alta: nombre, cantidad, precio unitario y costo interno unitario; por ejemplo implementación especial.
-
-Mensualidad = base + usuarios extra + servicio mensual. Alta = base + adicionales de alta. Los costos internos de servicios parten en cero hasta presupuestarlos. Los cobros se redondean a centavos por línea. En cotización automática, el precio base excluye el costo incremental de usuarios extra; los extras se cobran separadamente para evitar duplicaciones.
-
-La simulación indica USD (dólares estadounidenses), USD/mes para servicios recurrentes y USD por única vez para alta. Ambos PDF detallan base y extras, con totales conciliados. El PDF comercial excluye costos y margen; el interno agrega costos de licencias, servicios y adicionales de alta. La simulación no modifica ni guarda excepciones en la cartera.
-
-El resultado de la simulación separa formación de mensualidad, costos operativos con una explicación por concepto, objetivo de recuperación y resultado, y cobros/costos de alta por única vez. La distribución orientativa del precio base queda en un desplegable; no representa cargos adicionales.
+La migración v1–v7 conserva precios, cantidades y parámetros principales. Convierte trabajo a días equivalentes; en contratos por capacidad usa el costo del mes seleccionado. Unifica incorporación en el mes 1. Archiva los datos anteriores en `legacyV7`, incluyendo actividades y simulación, para no perder la referencia original. Los precios se normalizan a centavos.
 
 ## Validación
-
-Ejecuta con Node.js, sin instalar dependencias:
 
 ```sh
 node tests/model.test.cjs
 ```
 
-472 comprobaciones cubren recuperación a nivel del proyecto, saldo pendiente, clientes futuros, ausencia de clientes, inversión sin doble descuento, planes y licencias aportadas, mínimos y redondeo Fargate, frecuencias, reintentos, costos compartidos, bloques de personal, conciliación de categorías, ventas fijas y migración.
+Cubre días y tarifa, ±20%, precios fijos, conciliación por categoría/empresa, cloud y empleados, licencias, inversión, migración, perfiles específicos activables, simulación sin duplicación y reportes. Para generar un PDF de prueba:
 
-También incluyen conversión empleados/GB, calibración editable, ausencia de multiplicación por tiendas, efecto exclusivo en cloud, cantidades agrupadas y conservación del calendario, herencia por tamaño, exclusión de antiguos precios individuales, EGC/tiendas con impacto exclusivo en cloud, precarga de los tres tamaños, aislamiento de la simulación, extras sin duplicación, reemplazo de empresa y desglose comercial a centavos. Se comprueban en navegador la edición, precarga, notificaciones y exportación PDF; los PDF se renderizan y revisan visualmente. Estas verificaciones validan la lógica implementada; tiempos y consumos presupuestados requieren validación operacional.
+```sh
+node tests/model.test.cjs ejemplo.pdf price
+node tests/model.test.cjs interno.pdf full
+```
+
+Publicación: cambios en `main` despliegan el proyecto `inform-cl/escenarios-panel-bi` en Vercel.
