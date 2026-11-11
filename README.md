@@ -6,7 +6,7 @@ HTML autónomo, también utilizable sin conexión. Guarda datos en el navegador 
 
 ## Modelo v8
 
-**Tamaños y empresas** es el único lugar para editar perfiles y el margen sobre mantenimiento. Los precios se calculan a partir de los costos. Pequeño, mediano y grande tienen cantidades de empresas, empleados, Employee Group Containers, employee groups, usuarios, plan BI, mensualidad y precio one-time. Cada empresa específica copia un tamaño y posee un perfil independiente: una casilla determina si cuenta como 0 o 1. Todas comienzan en el mes 1.
+**Tamaños y empresas** es el único lugar para editar perfiles. Los precios se calculan a partir de los costos. Pequeño, mediano y grande tienen cantidades de empresas, empleados, Employee Group Containers, employee groups, usuarios, plan BI, mensualidad y precio one-time. Cada empresa específica copia un tamaño y posee un perfil independiente: una casilla determina si cuenta como 0 o 1. Todas comienzan en el mes 1.
 
 Soporte, mantenimiento e implementación se definen en **días hombre**. La única variable en Tarifa y calendario es la tarifa diaria; la jornada es de 8 horas. Las demás referencias de calendario permanecen fijas. El ejemplo inicial usa US$600/día:
 
@@ -20,7 +20,7 @@ Soporte, mantenimiento e implementación se definen en **días hombre**. La úni
 
 Estos valores iniciales aplican a configuraciones nuevas; las configuraciones guardadas conservan sus días.
 
-El mantenimiento se configura como un costo compartido de la plataforma, inicialmente 0,25 días/mes. Se multiplica por la tarifa diaria y se distribuye por igual entre las empresas activas. Los días de soporte se configuran por perfil. La implementación se cobra al costo real. La suscripción es soporte más mantenimiento compartido asignado, más un porcentaje de recargo sobre el costo de mantenimiento configurable por tamaño o empresa. El recargo inicial es 0 %. Cloud y licencias se mantienen en el costo operativo para calcular el resultado.
+El mantenimiento se configura como un costo compartido de la plataforma, inicialmente 0,25 días/mes. Se multiplica por la tarifa diaria y se distribuye por igual entre las empresas activas. Los días de soporte se configuran por perfil. La implementación se cobra al costo real. La suscripción de la cartera es soporte más mantenimiento compartido asignado. En la simulación se añade el costo cloud asignado a la empresa y un recargo cloud editable que comienza en 0 %. Las licencias se mantienen en el costo operativo para calcular el resultado.
 
 ### Escenarios
 
@@ -32,7 +32,7 @@ El ajuste afecta costos cloud, otros operacionales comunes, soporte, mantenimien
 
 ### Simulación de una empresa
 
-Un selector carga los tamaños estándar o una empresa específica existente. Parámetros, precio base, mes y escenario son de solo lectura. Solo se editan usuarios adicionales, su precio mensual y trabajos extra con nombre y horas.
+Un selector carga los tamaños estándar o una empresa específica existente. Parámetros, precio base, mes y escenario son de solo lectura. Solo se editan el margen cloud, los usuarios adicionales, su precio mensual y trabajos extra con nombre y horas.
 
 `Trabajo extra = horas / 8 × tarifa día hombre`
 
@@ -81,7 +81,7 @@ La migración v1–v7 conserva precios, cantidades y parámetros principales. Co
 node tests/model.test.cjs
 ```
 
-Cubre días y tarifa, ±20%, precios calculados y margen de mantenimiento, conciliación por categoría/empresa, cloud y empleados, licencias, inversión, migración, perfiles específicos activables, simulación sin duplicación y reportes. Para generar un PDF de prueba:
+Cubre días y tarifa, ±20%, precios calculados y margen cloud en simulación, conciliación por categoría/empresa, cloud y empleados, licencias, inversión, migración, perfiles específicos activables, simulación sin duplicación y reportes. Para generar un PDF de prueba:
 
 ```sh
 node tests/model.test.cjs ejemplo.pdf price
