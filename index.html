@@ -440,7 +440,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 const DATA=JSON.parse(document.getElementById('sourceData').textContent);
 const sizes=['Pequeño','Mediano','Grande'],colors=['#356be8','#087f8c','#8a60c5','#d48a32','#7a8da7','#bbc7da'];
 const clone=x=>JSON.parse(JSON.stringify(x)),sum=a=>a.reduce((s,v)=>s+v,0),$=id=>document.getElementById(id),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=(x,d=0)=>x===null||!Number.isFinite(x)?'—':new Intl.NumberFormat('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d}).format(Math.abs(x)<.5/10**d?0:x);
+const fmt=(x,d=0)=>x===null||!Number.isFinite(x)?'—':new Intl.NumberFormat('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:false}).format(Math.abs(x)<.5/10**d?0:x);
 const money=(x,d=0)=>x===null||!Number.isFinite(x)?'—':'US$ '+fmt(x,d);
 function makeClient(size=0,count=1){return {id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),name:['Empresa pequeña','Empresa mediana','Empresa grande'][size],size,count,start:1,users:null,owned:null,ownedPlan:'pro',data:1,support:1,price:null,setupPrice:null,...client5Defaults()};}
 function scenarioFactor(sc){return [.8,1,1.2][sc];}
