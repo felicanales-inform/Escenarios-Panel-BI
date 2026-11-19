@@ -20,7 +20,7 @@ Soporte, mantenimiento e implementación se definen en **días hombre**. La úni
 
 Estos valores iniciales aplican a configuraciones nuevas; las configuraciones guardadas conservan sus días.
 
-El mantenimiento se configura como un costo compartido de la plataforma, inicialmente 0,25 días/mes. Se multiplica por la tarifa diaria y se distribuye por igual entre las empresas activas. Los días de soporte se configuran por perfil. La implementación se cobra al costo real. La suscripción de la cartera es soporte más mantenimiento compartido asignado. En la simulación se añade el costo cloud asignado a la empresa y un recargo cloud editable que comienza en 0 %. Las licencias se mantienen en el costo operativo para calcular el resultado.
+El mantenimiento se configura en días por empresa en cada tamaño o perfil específico. Su costo se obtiene multiplicando esos días por la tarifa diaria. Los días de soporte se configuran por perfil. La implementación se cobra al costo real. La suscripción suma soporte, mantenimiento por empresa y cloud asignado; un porcentaje de margen por perfil se aplica a cada componente. En la simulación se precarga ese margen y se puede modificar. Las licencias se mantienen en el costo operativo para calcular el resultado.
 
 ### Escenarios
 
