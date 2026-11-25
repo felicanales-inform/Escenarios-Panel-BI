@@ -1,7 +1,15 @@
 # Escenarios Panel BI
 
 [Abrir aplicación](https://escenarios-panel-bi.vercel.app/) · Simulador de costos y venta B2B en USD, sin impuestos.
-
+> ⚠️ **Aviso de seguridad y uso**
+>
+> Este portal corresponde a un **HTML estático (HTML plano)** y **no implementa mecanismos de seguridad, autenticación, autorización ni protección de datos**. La información almacenada, exportada o incorporada en la aplicación debe considerarse **potencialmente expuesta**.
+>
+> Aunque parte de la información puede guardarse localmente en el navegador, el proyecto **no está diseñado para almacenar información sensible, confidencial, personal, financiera o regulada**. Los datos ingresados pueden ser visibles para cualquier persona con acceso al equipo, al navegador o a los archivos exportados.
+>
+> Los usuarios deben utilizar únicamente datos de prueba, referenciales o previamente anonimizados. Se recomienda no ingresar información confidencial de clientes, credenciales, datos personales, secretos comerciales ni cualquier otro dato que requiera protección.
+>
+> El uso de este portal implica aceptar que fue desarrollado como una herramienta de simulación y análisis, sin garantías de seguridad, privacidad o cumplimiento normativo para el tratamiento de información sensible.
 HTML autónomo, también utilizable sin conexión. Guarda datos en el navegador y permite exportar/importar JSON, descargar un HTML personalizado y generar PDF con jsPDF 4.2.1 incluido (licencia MIT en `LICENSE-jsPDF.txt`).
 
 ## Modelo v8
