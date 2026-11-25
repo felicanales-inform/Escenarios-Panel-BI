@@ -8,17 +8,17 @@ HTML autónomo, también utilizable sin conexión. Guarda datos en el navegador 
 
 **Tamaños y empresas** es el único lugar para editar perfiles. Los precios se calculan a partir de los costos. Pequeño, mediano y grande tienen cantidades de empresas, empleados, Employee Group Containers, employee groups, usuarios, plan BI, mensualidad y precio one-time. Cada empresa específica copia un tamaño y posee un perfil independiente: una casilla determina si cuenta como 0 o 1. Todas comienzan en el mes 1.
 
-Soporte, mantenimiento e implementación se definen en **días hombre**. La única variable en Tarifa y calendario es la tarifa diaria; la jornada es de 8 horas. Las demás referencias de calendario permanecen fijas. El ejemplo inicial usa US$600/día:
+Soporte, mantenimiento e implementación se definen en **días hombre**. La tarifa inicial es de US$500 por día de 8 horas. El panel comienza con SODEXO como única empresa activa, en el mes 1 del escenario base. Los clientes aportan las licencias y la referencia de Power BI Pro es de US$14 por usuario al mes.
 
-| Trabajo | Pequeño | Mediano | Grande |
-|---|---:|---:|---:|
-| Setup cloud, días | 0,5 | 1 | 1,5 |
-| Configuración BI, días | 1,5 | 2 | 3 |
-| Costo de implementación USD | 1.200 | 1.800 | 2.700 |
-| Soporte, días/mes | 0,3 | 0,3 | 0,5 |
+| Trabajo | Pequeño | Mediano | Grande | SODEXO |
+|---|---:|---:|---:|---:|
+| Setup cloud, días | 2 | 2 | 2 | 2 |
+| Configuración Power BI, días | 3 | 3 | 3 | 3 |
+| Costo de implementación USD | 2.500 | 2.500 | 2.500 | 2.500 |
+| Soporte, días/mes | 0,3 | 0,3 | 0,5 | 0,5 |
+| Mantenimiento, días/mes | 0,5 | 0,5 | 0,5 | 0,5 |
 
-
-Estos valores iniciales aplican a configuraciones nuevas; las configuraciones guardadas conservan sus días.
+Estos valores se usan al abrir el panel por primera vez o elegir **Restablecer**. El panel conserva la configuración activa y las comparaciones que el usuario guardó en su navegador.
 
 El mantenimiento se configura en días por empresa en cada tamaño o perfil específico. Su costo se obtiene multiplicando esos días por la tarifa diaria. Los días de soporte se configuran por perfil. La implementación se cobra al costo real. La suscripción suma soporte, mantenimiento por empresa y cloud asignado; un porcentaje de margen por perfil se aplica a cada componente. En la simulación se precarga ese margen y se puede modificar. Las licencias se mantienen en el costo operativo para calcular el resultado.
 
@@ -28,7 +28,7 @@ El mantenimiento se configura en días por empresa en cada tamaño o perfil espe
 - **Optimista:** costos × 0,8.
 - **Conservador:** costos × 1,2.
 
-El ajuste afecta costos cloud, otros operacionales comunes, soporte, mantenimiento compartido e implementación. Es una contingencia presupuestaria: no modifica tarifas, capacidad, licencias, inversión ni consumos técnicos. Los precios calculados cambian con los costos de soporte, mantenimiento e implementación. Los días equivalentes mostrados reflejan el factor del escenario; cada configuración guardada conserva sus propios parámetros.
+El ajuste afecta costos cloud, otros operacionales comunes, soporte, mantenimiento por empresa e implementación. Es una contingencia presupuestaria: no modifica tarifas, capacidad, licencias, inversión ni consumos técnicos. Los precios calculados cambian con los costos de soporte, mantenimiento e implementación. Los días equivalentes mostrados reflejan el factor del escenario; cada configuración guardada conserva sus propios parámetros.
 
 ### Simulación de una empresa
 
